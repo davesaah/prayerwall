@@ -141,7 +141,7 @@ const formatQuote = () => insertMarkdown('> ')
       <div class="grid gap-4">
         <Input 
           v-model="form.title" 
-          placeholder="Entry Title" 
+          placeholder="Prayer Request Title" 
           class="text-2xl font-bold border-none px-0 shadow-none focus-visible:ring-0 placeholder:text-muted-foreground/50 h-auto py-2"
         />
         <div class="flex items-center gap-2 text-muted-foreground">

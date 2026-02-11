@@ -15,10 +15,12 @@ import { marked } from 'marked'
 
 const route = useRoute()
 const router = useRouter()
-const { getEntry, addAfterthought } = useJournal()
+const { getEntry, addAfterthought, addTestimony } = useJournal()
 
 const entry = computed(() => getEntry(route.params.id))
-const newThought = ref('')
+const newEncouragement = ref('')
+const newTestimony = ref('')
+const activeSection = ref('encouragement') // 'encouragement' or 'testimony'
 
 // Configure marked for better rendering
 marked.setOptions({
@@ -44,7 +46,7 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString(undefined, options)
 }
 
-const formatThoughtDate = (dateString) => {
+const formatRelativeDate = (dateString) => {
   if (!dateString) return ''
   const date = new Date(dateString)
   const now = new Date()
@@ -69,28 +71,39 @@ const goBack = () => {
   router.back()
 }
 
-const submitThought = () => {
-  if (!newThought.value.trim()) return
-  addAfterthought(entry.value.id, newThought.value.trim())
-  newThought.value = ''
+const submitEncouragement = () => {
+  if (!newEncouragement.value.trim()) return
+  addAfterthought(entry.value.id, newEncouragement.value.trim())
+  newEncouragement.value = ''
+}
+
+const submitTestimony = () => {
+  if (!newTestimony.value.trim()) return
+  addTestimony(entry.value.id, newTestimony.value.trim())
+  newTestimony.value = ''
 }
 
 // Formatting functions for afterthoughts
-const insertMarkdown = (before, after = '') => {
-  const textarea = document.getElementById('afterthought-editor')
+const insertMarkdown = (target, before, after = '') => {
+  const textarea = document.getElementById(target === 'encouragement' ? 'encouragement-editor' : 'testimony-editor')
   if (!textarea) return
   
+  const currentVal = target === 'encouragement' ? newEncouragement.value : newTestimony.value
   const start = textarea.selectionStart
   const end = textarea.selectionEnd
-  const selectedText = newThought.value.substring(start, end)
+  const selectedText = currentVal.substring(start, end)
   
   const newText = before + selectedText + after
   const newContent = 
-    newThought.value.substring(0, start) + 
+    currentVal.substring(0, start) + 
     newText + 
-    newThought.value.substring(end)
+    currentVal.substring(end)
   
-  newThought.value = newContent
+  if (target === 'encouragement') {
+    newEncouragement.value = newContent
+  } else {
+    newTestimony.value = newContent
+  }
   
   // Set cursor position
   setTimeout(() => {
@@ -102,27 +115,16 @@ const insertMarkdown = (before, after = '') => {
   }, 0)
 }
 
-const formatBold = () => insertMarkdown('**', '**')
-const formatItalic = () => insertMarkdown('*', '*')
-const formatH1 = () => insertMarkdown('# ')
-const formatH2 = () => insertMarkdown('## ')
-const formatBulletList = () => insertMarkdown('- ')
-const formatNumberedList = () => insertMarkdown('1. ')
-const formatLink = () => insertMarkdown('[', '](url)')
-const formatQuote = () => insertMarkdown('> ')
-
 const formatActions = [
-  { icon: Bold, handler: formatBold, label: 'Bold' },
-  { icon: Italic, handler: formatItalic, label: 'Italic' },
-  { icon: Heading1, handler: formatH1, label: 'Heading 1' },
-  { icon: Heading2, handler: formatH2, label: 'Heading 2' },
-  { icon: List, handler: formatBulletList, label: 'Bullet List' },
-  { icon: ListOrdered, handler: formatNumberedList, label: 'Numbered List' },
-  { icon: Link, handler: formatLink, label: 'Link' },
-  { icon: Quote, handler: formatQuote, label: 'Quote' },
+  { icon: Bold, handler: (target) => insertMarkdown(target, '**', '**'), label: 'Bold' },
+  { icon: Italic, handler: (target) => insertMarkdown(target, '*', '*'), label: 'Italic' },
+  { icon: Heading1, handler: (target) => insertMarkdown(target, '# '), label: 'Heading 1' },
+  { icon: Heading2, handler: (target) => insertMarkdown(target, '## '), label: 'Heading 2' },
+  { icon: List, handler: (target) => insertMarkdown(target, '- '), label: 'Bullet List' },
+  { icon: ListOrdered, handler: (target) => insertMarkdown(target, '1. '), label: 'Numbered List' },
+  { icon: Link, handler: (target) => insertMarkdown(target, '[', '](url)'), label: 'Link' },
+  { icon: Quote, handler: (target) => insertMarkdown(target, '> '), label: 'Quote' },
 ]
-
-
 
 </script>
 
@@ -130,57 +132,57 @@ const formatActions = [
   <div v-if="entry" class="container max-w-3xl mx-auto py-12 px-4">
     <header class="flex justify-between items-center mb-8">
       <Button variant="ghost" @click="goBack" class="gap-2 pl-0 hover:pl-2 transition-all">
-        <ArrowLeft class="w-4 h-4" /> Back
+        <ArrowLeft class="w-4 h-4" /> Back to Wall
       </Button>
     </header>
 
     <article class="mb-12">
-      <h1 class="mb-2 text-4xl font-extrabold tracking-tight">{{ entry.title || 'Untitled Entry' }}</h1>
+      <h1 class="mb-2 text-4xl font-extrabold tracking-tight">{{ entry.title || 'Untitled Request' }}</h1>
       <time class="block text-muted-foreground mb-8 text-lg">{{ formatDate(entry.date) }}</time>
       <div 
-        class="prose prose-lg dark:prose-invert max-w-none"
+        class="prose prose-lg max-w-none"
         v-html="renderedContent"
       />
     </article>
 
-    <!-- AfterThoughts Section -->
-    <div class="border-t border-border pt-8">
-      <div class="flex items-center gap-2 mb-6">
-        <MessageSquare class="w-5 h-5 text-primary" />
-        <h2 class="text-2xl font-bold">AfterThoughts</h2>
+    <!-- Words of Encouragement Section -->
+    <section class="border-t border-border pt-12 mb-16">
+      <div class="flex items-center gap-2 mb-8">
+        <div class="p-2 bg-blue-100 rounded-full text-primary">
+          <MessageSquare class="w-6 h-6" />
+        </div>
+        <h2 class="text-3xl font-bold">Words of Encouragement</h2>
       </div>
 
-      <!-- Existing Thoughts -->
-      <div v-if="entry.afterthoughts && entry.afterthoughts.length > 0" class="space-y-4 mb-6">
+      <!-- Existing Encouragements -->
+      <div v-if="entry.afterthoughts && entry.afterthoughts.length > 0" class="space-y-6 mb-8">
         <Card 
           v-for="thought in entry.afterthoughts" 
           :key="thought.id"
-          class="border-l-4 border-l-primary/50"
+          class="border-l-4 border-l-blue-500 bg-blue-50/30"
         >
-          <CardContent class="pt-4">
-            <div>
-              <div class="prose prose-sm dark:prose-invert max-w-none" v-html="marked(thought.content)" />
-              <p class="text-xs text-muted-foreground mt-2">{{ formatThoughtDate(thought.createdAt) }}</p>
-            </div>
+          <CardContent class="pt-6">
+            <div class="prose prose-sm max-w-none" v-html="marked(thought.content)" />
+            <p class="text-xs text-muted-foreground mt-4 font-medium">{{ formatRelativeDate(thought.createdAt) }}</p>
           </CardContent>
         </Card>
       </div>
 
-      <div v-else class="text-center py-8 text-muted-foreground">
-        <MessageSquare class="w-12 h-12 mx-auto mb-2 opacity-50" />
-        <p>No afterthoughts yet. Add your reflections below.</p>
+      <div v-else class="text-center py-12 bg-muted/20 rounded-xl border border-dashed mb-8">
+        <MessageSquare class="w-12 h-12 mx-auto mb-3 opacity-20" />
+        <p class="text-muted-foreground">Be the first to share a word of encouragement.</p>
       </div>
 
-      <!-- Add New Thought -->
-      <div class="space-y-3">
-        <!-- Formatting Toolbar -->
-        <div class="flex flex-wrap gap-1 p-2 border rounded-lg bg-muted/30">
+      <!-- Add New Encouragement -->
+      <div class="space-y-4 bg-muted/30 p-6 rounded-xl border">
+        <h3 class="font-semibold text-lg">Share Encouragement</h3>
+        <div class="flex flex-wrap gap-1 p-1 bg-background/50 rounded-md border">
           <Button 
             v-for="action in formatActions" 
             :key="action.label"
             variant="ghost" 
             size="sm" 
-            @click="action.handler"
+            @click="action.handler('encouragement')"
             class="h-8 w-8 p-0"
             :title="action.label"
           >
@@ -189,21 +191,83 @@ const formatActions = [
         </div>
 
         <Textarea 
-          id="afterthought-editor"
-          v-model="newThought" 
-          placeholder="Add an afterthought or reflection (supports markdown)..."
-          class="min-h-[100px] resize-none font-mono"
-          @keydown.ctrl.enter="submitThought"
-          @keydown.meta.enter="submitThought"
+          id="encouragement-editor"
+          v-model="newEncouragement" 
+          placeholder="Share a word from God or words of encouragement..."
+          class="min-h-[120px] resize-none bg-background focus-visible:ring-primary shadow-sm"
+          @keydown.ctrl.enter="submitEncouragement"
+          @keydown.meta.enter="submitEncouragement"
         />
         <div class="flex justify-between items-center">
           <p class="text-xs text-muted-foreground">Ctrl/Cmd + Enter to submit</p>
-          <Button @click="submitThought" class="gap-2" :disabled="!newThought.trim()">
-            <Send class="w-4 h-4" /> Add Thought
+          <Button @click="submitEncouragement" class="gap-2 px-6" :disabled="!newEncouragement.trim()">
+            <Send class="w-4 h-4" /> Post Encouragement
           </Button>
         </div>
       </div>
-    </div>
+    </section>
+
+    <!-- Testimony Section -->
+    <section class="border-t border-border pt-12">
+      <div class="flex items-center gap-2 mb-8">
+        <div class="p-2 bg-green-100 rounded-full text-green-600">
+          <Quote class="w-6 h-6" />
+        </div>
+        <h2 class="text-3xl font-bold">Testimonies</h2>
+      </div>
+
+      <!-- Existing Testimonies -->
+      <div v-if="entry.testimonies && entry.testimonies.length > 0" class="space-y-6 mb-8">
+        <Card 
+          v-for="testimony in entry.testimonies" 
+          :key="testimony.id"
+          class="border-l-4 border-l-green-500 bg-green-50/30"
+        >
+          <CardContent class="pt-6">
+            <div class="prose prose-sm max-w-none" v-html="marked(testimony.content)" />
+            <p class="text-xs text-muted-foreground mt-4 font-medium">{{ formatRelativeDate(testimony.createdAt) }}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div v-else class="text-center py-12 bg-muted/20 rounded-xl border border-dashed mb-8">
+        <Quote class="w-12 h-12 mx-auto mb-3 opacity-20" />
+        <p class="text-muted-foreground">No testimonies yet. Share how God answered this prayer!</p>
+      </div>
+
+      <!-- Add New Testimony -->
+      <div class="space-y-4 bg-muted/30 p-6 rounded-xl border">
+        <h3 class="font-semibold text-lg">Share a Testimony</h3>
+        <div class="flex flex-wrap gap-1 p-1 bg-background/50 rounded-md border">
+          <Button 
+            v-for="action in formatActions" 
+            :key="action.label"
+            variant="ghost" 
+            size="sm" 
+            @click="action.handler('testimony')"
+            class="h-8 w-8 p-0"
+            :title="action.label"
+          >
+            <component :is="action.icon" class="w-4 h-4" />
+          </Button>
+        </div>
+
+        <Textarea 
+          id="testimony-editor"
+          v-model="newTestimony" 
+          placeholder="How has God answered this prayer? Share your testimony..."
+          class="min-h-[120px] resize-none bg-background focus-visible:ring-green-500 shadow-sm"
+          @keydown.ctrl.enter="submitTestimony"
+          @keydown.meta.enter="submitTestimony"
+        />
+        <div class="flex justify-between items-center">
+          <p class="text-xs text-muted-foreground">Ctrl/Cmd + Enter to submit</p>
+          <Button @click="submitTestimony" class="gap-2 px-6 bg-green-600 hover:bg-green-700" :disabled="!newTestimony.trim()">
+            <Send class="w-4 h-4" /> Share Testimony
+          </Button>
+        </div>
+      </div>
+    </section>
   </div>
   
   <div v-else class="flex flex-col items-center justify-center min-h-[50vh] text-center">

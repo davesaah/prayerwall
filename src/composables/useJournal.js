@@ -67,6 +67,20 @@ export function useJournal() {
     }
   }
 
+  const addTestimony = (entryId, content) => {
+    const index = entries.value.findIndex(e => e.id === entryId)
+    if (index !== -1) {
+      if (!entries.value[index].testimonies) {
+        entries.value[index].testimonies = []
+      }
+      entries.value[index].testimonies.push({
+        id: crypto.randomUUID(),
+        content: content,
+        createdAt: new Date().toISOString()
+      })
+    }
+  }
+
   const deleteAfterthought = (entryId, thoughtId) => {
     const index = entries.value.findIndex(e => e.id === entryId)
     if (index !== -1 && entries.value[index].afterthoughts) {
@@ -82,6 +96,7 @@ export function useJournal() {
     updateEntry,
     deleteEntry,
     getEntry,
-    addAfterthought
+    addAfterthought,
+    addTestimony
   }
 }

@@ -36,23 +36,23 @@ const openEntry = (id) => {
   <div class="container max-w-5xl mx-auto py-12 px-4">
     <header class="flex justify-between items-center mb-12">
       <div>
-        <h1 class="text-4xl font-bold tracking-tight mb-2 bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-          My Journal
+        <h1 class="text-4xl font-bold tracking-tight mb-2 bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+          Prayer Wall
         </h1>
         <p class="text-muted-foreground text-lg">
-          Capture your thoughts, ideas, and memories.
+          Share your prayer requests and see how God is moving.
         </p>
       </div>
       <Button @click="createNewEntry" size="lg" class="shadow-lg hover:shadow-xl transition-all">
-        New Entry
+        New Prayer Request
       </Button>
     </header>
 
     <div v-if="entries.length === 0" class="flex flex-col items-center justify-center min-h-[400px] text-center border-2 border-dashed rounded-lg bg-muted/30">
       <div class="max-w-md space-y-4">
-        <h3 class="text-2xl font-semibold">No entries yet</h3>
-        <p class="text-muted-foreground">Start writing your first journal entry today.</p>
-        <Button variant="secondary" @click="createNewEntry">Create Entry</Button>
+        <h3 class="text-2xl font-semibold">No prayer requests yet</h3>
+        <p class="text-muted-foreground">Be the first to share a prayer request today.</p>
+        <Button variant="secondary" @click="createNewEntry">Share Request</Button>
       </div>
     </div>
 
@@ -73,7 +73,7 @@ const openEntry = (id) => {
               <BookOpen class="w-5 h-5" />
             </div>
             <CardTitle class="text-xl group-hover:text-primary transition-colors leading-tight">
-              {{ entry.title || 'Untitled Entry' }}
+              {{ entry.title || 'Untitled Request' }}
             </CardTitle>
           </div>
         </CardHeader>
