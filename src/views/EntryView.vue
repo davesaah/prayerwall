@@ -1,7 +1,8 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useJournal } from '../composables/useJournal'
+import { useAuth } from '../composables/useAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -11,18 +12,28 @@ import {
   CardTitle,
   CardContent
 } from '@/components/ui/card'
-import { ArrowLeft, MessageSquare, Send, Bold, Italic, Heading1, Heading2, List, ListOrdered, Link, Quote, Book, Search, X, Loader2 } from 'lucide-vue-next'
+import { ArrowLeft, MessageSquare, Send, Bold, Italic, Heading1, Heading2, List, ListOrdered, Link, Quote, Book, Search, X, Loader2, CheckCircle2 } from 'lucide-vue-next'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import { marked } from 'marked'
 
 const route = useRoute()
 const router = useRouter()
-const { getEntry, addAfterthought, addTestimony } = useJournal()
+const { getEntry, addAfterthought, addTestimony, fetchEntries, markAsAnswered } = useJournal()
+const { currentUser, isAuthenticated } = useAuth()
 
 const entry = computed(() => getEntry(route.params.id))
 const newEncouragement = ref('')
 const newTestimony = ref('')
 const activeSection = ref('encouragement') // 'encouragement' or 'testimony'
+
+const isOwner = computed(() => currentUser.value && entry.value && entry.value.user_id === currentUser.value.id)
+const isAnswered = computed(() => entry.value?.is_answered)
+
+onMounted(async () => {
+  if (!entry.value) {
+    await fetchEntries()
+  }
+})
 
 // Bible Integration State
 const isBibleModalOpen = ref(false)
@@ -80,16 +91,23 @@ const goBack = () => {
   router.back()
 }
 
-const submitEncouragement = () => {
-  if (!newEncouragement.value.trim()) return
-  addAfterthought(entry.value.id, newEncouragement.value.trim())
+const submitEncouragement = async () => {
+  if (!newEncouragement.value.trim() || isAnswered.value) return
+  await addAfterthought(entry.value.id, newEncouragement.value.trim())
   newEncouragement.value = ''
 }
 
-const submitTestimony = () => {
-  if (!newTestimony.value.trim()) return
-  addTestimony(entry.value.id, newTestimony.value.trim())
+const submitTestimony = async () => {
+  if (!newTestimony.value.trim() || isAnswered.value || !isOwner.value) return
+  await addTestimony(entry.value.id, newTestimony.value.trim())
   newTestimony.value = ''
+}
+
+const handleMarkAsAnswered = async () => {
+  if (!isOwner.value || isAnswered.value) return
+  if (confirm('Are you sure you want to mark this prayer as answered? This will lock it for further comments.')) {
+    await markAsAnswered(entry.value.id)
+  }
 }
 
 // Bible Search Logic
@@ -189,7 +207,20 @@ const formatActions = [
       <Button variant="ghost" @click="goBack" class="gap-2 pl-0 hover:pl-2 transition-all">
         <ArrowLeft class="w-4 h-4" /> Back to Wall
       </Button>
-      <ThemeToggle />
+      <div class="flex items-center gap-4">
+        <Button 
+          v-if="isOwner && !isAnswered" 
+          variant="outline" 
+          @click="handleMarkAsAnswered"
+          class="gap-2 text-green-600 border-green-200 hover:bg-green-50"
+        >
+          <CheckCircle2 class="w-4 h-4" /> Mark as Answered
+        </Button>
+        <div v-else-if="isAnswered" class="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg font-bold text-sm">
+          <CheckCircle2 class="w-4 h-4" /> PRAISE GOD! ANSWERED
+        </div>
+        <ThemeToggle />
+      </div>
     </header>
 
     <article class="mb-12">
@@ -230,7 +261,7 @@ const formatActions = [
       </div>
 
       <!-- Add New Encouragement -->
-      <div class="space-y-4 bg-muted/30 p-6 rounded-xl border">
+      <div v-if="!isAnswered && isAuthenticated" class="space-y-4 bg-muted/30 p-6 rounded-xl border">
         <h3 class="font-semibold text-lg">Share Encouragement</h3>
         <div class="flex flex-wrap gap-1 p-1 bg-background/50 rounded-md border">
           <Button 
@@ -260,6 +291,12 @@ const formatActions = [
             <Send class="w-4 h-4" /> Post Encouragement
           </Button>
         </div>
+      </div>
+      <div v-else-if="!isAuthenticated" class="text-center py-6 bg-muted/10 rounded-lg border border-dashed">
+        <p class="text-muted-foreground text-sm">Please log in to share encouragement.</p>
+      </div>
+      <div v-else-if="isAnswered" class="text-center py-6 bg-green-50 rounded-lg border border-green-100">
+        <p class="text-green-700 text-sm font-medium">This prayer request is locked because it has been answered. Praise God!</p>
       </div>
     </section>
 
@@ -292,7 +329,7 @@ const formatActions = [
       </div>
 
       <!-- Add New Testimony -->
-      <div class="space-y-4 bg-muted/30 p-6 rounded-xl border">
+      <div v-if="isOwner && !isAnswered" class="space-y-4 bg-muted/30 p-6 rounded-xl border">
         <h3 class="font-semibold text-lg">Share a Testimony</h3>
         <div class="flex flex-wrap gap-1 p-1 bg-background/50 rounded-md border">
           <Button 
@@ -322,6 +359,9 @@ const formatActions = [
             <Send class="w-4 h-4" /> Share Testimony
           </Button>
         </div>
+      </div>
+      <div v-else-if="!isOwner && !isAnswered" class="text-center py-6 bg-muted/10 rounded-lg border border-dashed">
+        <p class="text-muted-foreground text-sm">Only the owner can share testimonies for this request.</p>
       </div>
     </section>
 

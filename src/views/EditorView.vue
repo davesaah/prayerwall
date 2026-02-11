@@ -60,13 +60,13 @@ onMounted(() => {
   }
 })
 
-const save = () => {
+const save = async () => {
   if (!form.value.content.trim()) return
 
   if (isEditing.value) {
-    updateEntry(entryId.value, form.value)
+    await updateEntry(entryId.value, form.value)
   } else {
-    addEntry(form.value)
+    await addEntry(form.value)
   }
   router.push('/')
 }

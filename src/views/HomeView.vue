@@ -1,6 +1,8 @@
 <script setup>
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useJournal } from '../composables/useJournal'
+import { useAuth } from '../composables/useAuth'
 import { 
   Card, 
   CardHeader, 
@@ -8,11 +10,21 @@ import {
   CardContent 
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Calendar, BookOpen } from 'lucide-vue-next'
+import { Calendar, BookOpen, CheckCircle2, LogOut } from 'lucide-vue-next'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 
 const router = useRouter()
-const { entries } = useJournal()
+const { entries, fetchEntries, loading } = useJournal()
+const { currentUser, logout, isAuthenticated } = useAuth()
+
+onMounted(() => {
+  fetchEntries()
+})
+
+const handleLogout = async () => {
+  await logout()
+  router.push('/login')
+}
 
 const formatDate = (dateString) => {
   const options = { year: 'numeric', month: 'long', day: 'numeric' }
@@ -46,13 +58,27 @@ const openEntry = (id) => {
       </div>
       <div class="flex items-center gap-4">
         <ThemeToggle />
-        <Button @click="createNewEntry" size="lg" class="shadow-lg hover:shadow-xl transition-all">
-          New Prayer Request
-        </Button>
+        <template v-if="isAuthenticated">
+          <Button @click="createNewEntry" size="lg" class="shadow-lg hover:shadow-xl transition-all">
+            New Prayer Request
+          </Button>
+          <Button variant="ghost" size="icon" @click="handleLogout" title="Logout">
+            <LogOut class="w-5 h-5" />
+          </Button>
+        </template>
+        <template v-else>
+          <Button @click="router.push('/login')" variant="outline" size="lg">
+            Sign In to Share
+          </Button>
+        </template>
       </div>
     </header>
 
-    <div v-if="entries.length === 0" class="flex flex-col items-center justify-center min-h-[400px] text-center border-2 border-dashed rounded-lg bg-muted/30">
+    <div v-if="loading" class="flex justify-center items-center min-h-[400px]">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+    </div>
+
+    <div v-else-if="entries.length === 0" class="flex flex-col items-center justify-center min-h-[400px] text-center border-2 border-dashed rounded-lg bg-muted/30">
       <div class="max-w-md space-y-4">
         <h3 class="text-2xl font-semibold">No prayer requests yet</h3>
         <p class="text-muted-foreground">Be the first to share a prayer request today.</p>
@@ -64,13 +90,17 @@ const openEntry = (id) => {
       <Card 
         v-for="entry in entries" 
         :key="entry.id" 
-        class="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-muted overflow-hidden"
+        class="group cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-muted overflow-hidden relative"
         @click="openEntry(entry.id)"
       >
+        <div v-if="entry.is_answered" class="absolute top-0 right-0 p-2 text-green-600">
+          <CheckCircle2 class="w-5 h-5 shadow-sm" />
+        </div>
         <CardHeader class="space-y-3">
           <div class="flex items-center gap-2 text-xs text-muted-foreground">
             <Calendar class="w-3.5 h-3.5" />
-            <span>{{ formatDate(entry.date) }}</span>
+            <span>{{ formatDate(entry.created_at) }}</span>
+            <span v-if="currentUser && entry.user_id === currentUser.id" class="ml-auto bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">Owner</span>
           </div>
           <div class="flex items-start gap-3">
             <div class="mt-1 text-primary/80">

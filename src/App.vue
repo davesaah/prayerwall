@@ -1,3 +1,4 @@
+<script setup>
 import { onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 
@@ -11,6 +12,7 @@ onMounted(() => {
     document.documentElement.classList.remove('dark')
   }
 })
+</script>
 
 <template>
   <RouterView v-slot="{ Component }">
