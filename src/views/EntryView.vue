@@ -100,7 +100,7 @@ const searchBible = async () => {
   bibleSearchResult.value = null
   
   try {
-    const response = await fetch(`https://bible-api.com/${encodeURIComponent(bibleSearchQuery.value)}`)
+    const response = await fetch(`https://bible-api.com/${encodeURIComponent(bibleSearchQuery.value)}?translation=kjv`)
     if (!response.ok) throw new Error('Verse not found. Please check the reference.')
     const data = await response.json()
     bibleSearchResult.value = data
