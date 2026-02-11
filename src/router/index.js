@@ -33,7 +33,13 @@ const router = createRouter({
       name: 'edit-entry',
       component: () => import('../views/EditorView.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/auth/callback',
+      name: 'auth-callback',
+      component: () => import('../views/AuthCallback.vue')
     }
+
   ]
 })
 
