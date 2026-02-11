@@ -6,7 +6,7 @@ import { useAuth } from '../composables/useAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { 
+import {
   Card,
   CardHeader,
   CardTitle,
@@ -55,10 +55,10 @@ const renderedContent = computed(() => {
 
 const formatDate = (dateString) => {
   if (!dateString) return ''
-  const options = { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
+  const options = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
@@ -73,15 +73,15 @@ const formatRelativeDate = (dateString) => {
   const diffMs = now - date
   const diffMins = Math.floor(diffMs / 60000)
   const diffHours = Math.floor(diffMs / 3600000)
-  const diffDays = Math.floor(diffMs / 86400000)
-  
+  const diffDays = Math.floor(diffMs / 8400000)
+
   if (diffMins < 1) return 'just now'
   if (diffMins < 60) return `${diffMins}m ago`
   if (diffHours < 24) return `${diffHours}h ago`
   if (diffDays < 7) return `${diffDays}d ago`
-  
-  return new Date(dateString).toLocaleDateString(undefined, { 
-    month: 'short', 
+
+  return new Date(dateString).toLocaleDateString(undefined, {
+    month: 'short',
     day: 'numeric',
     year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
   })
@@ -113,11 +113,11 @@ const handleMarkAsAnswered = async () => {
 // Bible Search Logic
 const searchBible = async () => {
   if (!bibleSearchQuery.value.trim()) return
-  
+
   isSearchingBible.value = true
   bibleError.value = ''
   bibleSearchResult.value = null
-  
+
   try {
     const response = await fetch(`https://bible-api.com/${encodeURIComponent(bibleSearchQuery.value)}?translation=kjv`)
     if (!response.ok) throw new Error('Verse not found. Please check the reference.')
@@ -139,11 +139,11 @@ const closeBibleModal = () => {
 
 const insertVerse = () => {
   if (!bibleSearchResult.value) return
-  
+
   const reference = bibleSearchResult.value.reference
   const text = bibleSearchResult.value.text.trim()
   const formattedVerse = `\n\n> "${text}" — ${reference}\n\n`
-  
+
   // We always insert into encouragement when using the bible button
   newEncouragement.value += formattedVerse
   closeBibleModal()
@@ -153,28 +153,28 @@ const insertVerse = () => {
 const insertMarkdown = (target, before, after = '') => {
   const textarea = document.getElementById(target === 'encouragement' ? 'encouragement-editor' : 'testimony-editor')
   if (!textarea) return
-  
+
   const currentVal = target === 'encouragement' ? newEncouragement.value : newTestimony.value
   const start = textarea.selectionStart
   const end = textarea.selectionEnd
   const selectedText = currentVal.substring(start, end)
-  
+
   const newText = before + selectedText + after
-  const newContent = 
-    currentVal.substring(0, start) + 
-    newText + 
+  const newContent =
+    currentVal.substring(0, start) +
+    newText +
     currentVal.substring(end)
-  
+
   if (target === 'encouragement') {
     newEncouragement.value = newContent
   } else {
     newTestimony.value = newContent
   }
-  
+
   // Set cursor position
   setTimeout(() => {
-    const newCursorPos = selectedText 
-      ? start + newText.length 
+    const newCursorPos = selectedText
+      ? start + newText.length
       : start + before.length
     textarea.focus()
     textarea.setSelectionRange(newCursorPos, newCursorPos)
@@ -190,12 +190,12 @@ const formatActions = [
   { icon: ListOrdered, handler: (target) => insertMarkdown(target, '1. '), label: 'Numbered List' },
   { icon: Link, handler: (target) => insertMarkdown(target, '[', '](url)'), label: 'Link' },
   { icon: Quote, handler: (target) => insertMarkdown(target, '> '), label: 'Quote' },
-  { 
-    icon: Book, 
+  {
+    icon: Book,
     handler: (target) => {
       if (target === 'encouragement') isBibleModalOpen.value = true
-    }, 
-    label: 'Bible Verse' 
+    },
+    label: 'Bible Verse'
   },
 ]
 
@@ -208,49 +208,58 @@ const formatActions = [
         <ArrowLeft class="w-4 h-4" /> Back to Wall
       </Button>
       <div class="flex items-center gap-4">
-        <Button 
-          v-if="isOwner && !isAnswered" 
-          variant="outline" 
-          @click="handleMarkAsAnswered"
-          class="gap-2 text-green-600 border-green-200 hover:bg-green-50"
-        >
+        <Button v-if="isOwner && !isAnswered" variant="outline" @click="handleMarkAsAnswered"
+          class="gap-2 text-green-600 border-green-200 hover:bg-green-50">
           <CheckCircle2 class="w-4 h-4" /> Mark as Answered
         </Button>
-        <div v-else-if="isAnswered" class="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg font-bold text-sm">
+        <div v-else-if="isAnswered"
+          class="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg font-bold text-sm">
           <CheckCircle2 class="w-4 h-4" /> PRAISE GOD! ANSWERED
         </div>
         <ThemeToggle />
       </div>
     </header>
 
-    <article class="mb-12">
-      <h1 class="mb-2 text-4xl font-extrabold tracking-tight">{{ entry.title || 'Untitled Request' }}</h1>
-      <time class="block text-muted-foreground mb-8 text-lg">{{ formatDate(entry.date) }}</time>
-      <div 
-        class="prose prose-lg max-w-none"
-        v-html="renderedContent"
-      />
+    <article class="mb-12 md:mb-16">
+      <div class="space-y-4 md:space-y-6 mb-8 md:mb-10">
+        <h1
+          class="text-3xl md:text-4xl font-extrabold tracking-tight leading-tight flex-1 bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/70">
+          {{ entry.title || 'Untitled Request' }}
+        </h1>
+
+        <time class="flex items-center gap-2 text-muted-foreground font-medium text-sm md:text-base">
+          <span class="w-1.5 h-1.5 rounded-full bg-primary" />
+          {{ formatDate(entry.created_at) }}
+        </time>
+      </div>
+
+      <div
+        class="prose prose-lg md:prose-xl dark:prose-invert max-w-none leading-relaxed text-foreground/90 selection:bg-primary/20 break-words"
+        v-html="renderedContent" />
     </article>
 
     <!-- Words of Encouragement Section -->
-    <section class="border-t border-border pt-12 mb-16">
-      <div class="flex items-center gap-2 mb-8">
-        <div class="p-2 bg-blue-100 rounded-full text-primary">
-          <MessageSquare class="w-6 h-6" />
+    <section class="border-t border-primary/10 pt-8 md:pt-12 pb-12">
+      <div class="flex items-center gap-3 mb-6 md:mb-8">
+        <div class="p-2 rounded-lg bg-primary/10">
+          <MessageSquare class="w-5 h-5 text-primary" />
         </div>
-        <h2 class="text-3xl font-bold">Words of Encouragement</h2>
+        <h2 class="text-xl md:text-2xl font-bold tracking-tight">Words of Encouragement</h2>
       </div>
 
       <!-- Existing Encouragements -->
-      <div v-if="entry.afterthoughts && entry.afterthoughts.length > 0" class="space-y-6 mb-8">
-        <Card 
-          v-for="thought in entry.afterthoughts" 
-          :key="thought.id"
-          class="border-l-4 border-l-blue-500 bg-blue-50/30"
-        >
-          <CardContent class="pt-6">
-            <div class="prose prose-sm max-w-none" v-html="marked(thought.content)" />
-            <p class="text-xs text-muted-foreground mt-4 font-medium">{{ formatRelativeDate(thought.createdAt) }}</p>
+      <div v-if="entry.afterthoughts && entry.afterthoughts.length > 0" class="space-y-4 md:space-y-6 mb-8 md:mb-10">
+        <Card v-for="thought in entry.afterthoughts" :key="thought.id"
+          class="border-none bg-muted/30 backdrop-blur-sm relative overflow-hidden group hover:bg-muted/40 transition-colors">
+          <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary/30 group-hover:bg-primary transition-colors" />
+          <CardContent class="py-4 px-6 md:py-6 md:px-8">
+            <div
+              class="prose md:prose-lg dark:prose-invert max-w-none text-foreground/80 leading-relaxed italic text-sm md:text-base"
+              v-html="marked(thought.content)" />
+            <div
+              class="flex items-center gap-2 mt-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
+              <span>— {{ formatRelativeDate(thought.created_at) }}</span>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -261,30 +270,20 @@ const formatActions = [
       </div>
 
       <!-- Add New Encouragement -->
-      <div v-if="!isAnswered && isAuthenticated" class="space-y-4 bg-muted/30 p-6 rounded-xl border">
+      <div v-if="!isAnswered && isAuthenticated"
+        class="space-y-4 bg-muted/30 p-6 rounded-xl border animate-in slide-in-from-bottom-4 duration-500">
         <h3 class="font-semibold text-lg">Share Encouragement</h3>
         <div class="flex flex-wrap gap-1 p-1 bg-background/50 rounded-md border">
-          <Button 
-            v-for="action in formatActions" 
-            :key="action.label"
-            variant="ghost" 
-            size="sm" 
-            @click="action.handler('encouragement')"
-            class="h-8 w-8 p-0"
-            :title="action.label"
-          >
+          <Button v-for="action in formatActions" :key="action.label" variant="ghost" size="sm"
+            @click="action.handler('encouragement')" class="h-8 w-8 p-0" :title="action.label">
             <component :is="action.icon" class="w-4 h-4" />
           </Button>
         </div>
 
-        <Textarea 
-          id="encouragement-editor"
-          v-model="newEncouragement" 
+        <Textarea id="encouragement-editor" v-model="newEncouragement"
           placeholder="Share a word from God or words of encouragement..."
           class="min-h-[120px] resize-none bg-background focus-visible:ring-primary shadow-sm"
-          @keydown.ctrl.enter="submitEncouragement"
-          @keydown.meta.enter="submitEncouragement"
-        />
+          @keydown.ctrl.enter="submitEncouragement" @keydown.meta.enter="submitEncouragement" />
         <div class="flex justify-between items-center">
           <p class="text-xs text-muted-foreground">Ctrl/Cmd + Enter to submit</p>
           <Button @click="submitEncouragement" class="gap-2 px-6" :disabled="!newEncouragement.trim()">
@@ -296,29 +295,33 @@ const formatActions = [
         <p class="text-muted-foreground text-sm">Please log in to share encouragement.</p>
       </div>
       <div v-else-if="isAnswered" class="text-center py-6 bg-green-50 rounded-lg border border-green-100">
-        <p class="text-green-700 text-sm font-medium">This prayer request is locked because it has been answered. Praise God!</p>
+        <p class="text-green-700 text-sm font-medium">This prayer request is locked because it has been answered. Praise
+          God!</p>
       </div>
     </section>
 
     <!-- Testimony Section -->
-    <section class="border-t border-border pt-12">
-      <div class="flex items-center gap-2 mb-8">
-        <div class="p-2 bg-green-100 rounded-full text-green-600">
-          <Quote class="w-6 h-6" />
+    <section class="border-t border-primary/10 pt-8 md:pt-12 pb-12">
+      <div class="flex items-center gap-3 mb-6 md:mb-8">
+        <div class="p-2 rounded-lg bg-green-100/10">
+          <Quote class="w-5 h-5 text-green-600" />
         </div>
-        <h2 class="text-3xl font-bold">Testimonies</h2>
+        <h2 class="text-xl md:text-2xl font-bold tracking-tight">Testimonies</h2>
       </div>
 
       <!-- Existing Testimonies -->
-      <div v-if="entry.testimonies && entry.testimonies.length > 0" class="space-y-6 mb-8">
-        <Card 
-          v-for="testimony in entry.testimonies" 
-          :key="testimony.id"
-          class="border-l-4 border-l-green-500 bg-green-50/30"
-        >
-          <CardContent class="pt-6">
-            <div class="prose prose-sm max-w-none" v-html="marked(testimony.content)" />
-            <p class="text-xs text-muted-foreground mt-4 font-medium">{{ formatRelativeDate(testimony.createdAt) }}</p>
+      <div v-if="entry.testimonies && entry.testimonies.length > 0" class="space-y-4 md:space-y-6 mb-8 md:mb-10">
+        <Card v-for="testimony in entry.testimonies" :key="testimony.id"
+          class="border-none bg-muted/30 backdrop-blur-sm relative overflow-hidden group hover:bg-muted/40 transition-colors">
+          <div class="absolute left-0 top-0 bottom-0 w-1 bg-green-500/30 group-hover:bg-green-500 transition-colors" />
+          <CardContent class="py-4 px-6 md:py-6 md:px-8">
+            <div
+              class="prose md:prose-lg dark:prose-invert max-w-none text-foreground/80 leading-relaxed italic text-sm md:text-base"
+              v-html="marked(testimony.content)" />
+            <div
+              class="flex items-center gap-2 mt-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
+              <span>— {{ formatRelativeDate(testimony.created_at) }}</span>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -332,30 +335,20 @@ const formatActions = [
       <div v-if="isOwner && !isAnswered" class="space-y-4 bg-muted/30 p-6 rounded-xl border">
         <h3 class="font-semibold text-lg">Share a Testimony</h3>
         <div class="flex flex-wrap gap-1 p-1 bg-background/50 rounded-md border">
-          <Button 
-            v-for="action in formatActions" 
-            :key="action.label"
-            variant="ghost" 
-            size="sm" 
-            @click="action.handler('testimony')"
-            class="h-8 w-8 p-0"
-            :title="action.label"
-          >
+          <Button v-for="action in formatActions" :key="action.label" variant="ghost" size="sm"
+            @click="action.handler('testimony')" class="h-8 w-8 p-0" :title="action.label">
             <component :is="action.icon" class="w-4 h-4" />
           </Button>
         </div>
 
-        <Textarea 
-          id="testimony-editor"
-          v-model="newTestimony" 
+        <Textarea id="testimony-editor" v-model="newTestimony"
           placeholder="How has God answered this prayer? Share your testimony..."
           class="min-h-[120px] resize-none bg-background focus-visible:ring-green-500 shadow-sm"
-          @keydown.ctrl.enter="submitTestimony"
-          @keydown.meta.enter="submitTestimony"
-        />
+          @keydown.ctrl.enter="submitTestimony" @keydown.meta.enter="submitTestimony" />
         <div class="flex justify-between items-center">
           <p class="text-xs text-muted-foreground">Ctrl/Cmd + Enter to submit</p>
-          <Button @click="submitTestimony" class="gap-2 px-6 bg-green-600 hover:bg-green-700" :disabled="!newTestimony.trim()">
+          <Button @click="submitTestimony" class="gap-2 px-6 bg-green-600 hover:bg-green-700"
+            :disabled="!newTestimony.trim()">
             <Send class="w-4 h-4" /> Share Testimony
           </Button>
         </div>
@@ -367,7 +360,8 @@ const formatActions = [
 
     <!-- Bible Search Modal -->
     <Transition name="fade">
-      <div v-if="isBibleModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div v-if="isBibleModalOpen"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
         <Card class="w-full max-w-lg shadow-2xl border-primary/20">
           <CardHeader class="flex flex-row items-center justify-between border-b pb-4">
             <div class="flex items-center gap-2">
@@ -382,12 +376,8 @@ const formatActions = [
             <div class="flex gap-2">
               <div class="relative flex-1">
                 <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input 
-                  v-model="bibleSearchQuery" 
-                  placeholder="e.g. John 3:16 or Psalm 23"
-                  class="pl-9"
-                  @keydown.enter="searchBible"
-                />
+                <Input v-model="bibleSearchQuery" placeholder="e.g. John 3:16 or Psalm 23" class="pl-9"
+                  @keydown.enter="searchBible" />
               </div>
               <Button @click="searchBible" :disabled="isSearchingBible">
                 <Loader2 v-if="isSearchingBible" class="w-4 h-4 mr-2 animate-spin" />
@@ -395,7 +385,8 @@ const formatActions = [
               </Button>
             </div>
 
-            <div v-if="bibleError" class="p-3 bg-destructive/10 text-destructive text-sm rounded-lg border border-destructive/20">
+            <div v-if="bibleError"
+              class="p-3 bg-destructive/10 text-destructive text-sm rounded-lg border border-destructive/20">
               {{ bibleError }}
             </div>
 
@@ -413,7 +404,7 @@ const formatActions = [
       </div>
     </Transition>
   </div>
-  
+
   <div v-else class="flex flex-col items-center justify-center min-h-[50vh] text-center">
     <h3 class="text-xl font-semibold mb-2">Entry not found</h3>
     <Button @click="goBack">Go Back</Button>
