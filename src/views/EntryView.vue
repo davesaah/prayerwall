@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useJournal } from '../composables/useJournal'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { 
   Card,
@@ -10,7 +11,7 @@ import {
   CardTitle,
   CardContent
 } from '@/components/ui/card'
-import { ArrowLeft, MessageSquare, Send, Bold, Italic, Heading1, Heading2, List, ListOrdered, Link, Quote } from 'lucide-vue-next'
+import { ArrowLeft, MessageSquare, Send, Bold, Italic, Heading1, Heading2, List, ListOrdered, Link, Quote, Book, Search, X, Loader2 } from 'lucide-vue-next'
 import { marked } from 'marked'
 
 const route = useRoute()
@@ -21,6 +22,13 @@ const entry = computed(() => getEntry(route.params.id))
 const newEncouragement = ref('')
 const newTestimony = ref('')
 const activeSection = ref('encouragement') // 'encouragement' or 'testimony'
+
+// Bible Integration State
+const isBibleModalOpen = ref(false)
+const bibleSearchQuery = ref('')
+const bibleSearchResult = ref(null)
+const isSearchingBible = ref(false)
+const bibleError = ref('')
 
 // Configure marked for better rendering
 marked.setOptions({
@@ -83,7 +91,46 @@ const submitTestimony = () => {
   newTestimony.value = ''
 }
 
-// Formatting functions for afterthoughts
+// Bible Search Logic
+const searchBible = async () => {
+  if (!bibleSearchQuery.value.trim()) return
+  
+  isSearchingBible.value = true
+  bibleError.value = ''
+  bibleSearchResult.value = null
+  
+  try {
+    const response = await fetch(`https://bible-api.com/${encodeURIComponent(bibleSearchQuery.value)}`)
+    if (!response.ok) throw new Error('Verse not found. Please check the reference.')
+    const data = await response.json()
+    bibleSearchResult.value = data
+  } catch (err) {
+    bibleError.value = err.message
+  } finally {
+    isSearchingBible.value = false
+  }
+}
+
+const closeBibleModal = () => {
+  isBibleModalOpen.value = false
+  bibleSearchQuery.value = ''
+  bibleSearchResult.value = null
+  bibleError.value = ''
+}
+
+const insertVerse = () => {
+  if (!bibleSearchResult.value) return
+  
+  const reference = bibleSearchResult.value.reference
+  const text = bibleSearchResult.value.text.trim()
+  const formattedVerse = `\n\n> "${text}" — ${reference}\n\n`
+  
+  // We always insert into encouragement when using the bible button
+  newEncouragement.value += formattedVerse
+  closeBibleModal()
+}
+
+// Formatting functions for editors
 const insertMarkdown = (target, before, after = '') => {
   const textarea = document.getElementById(target === 'encouragement' ? 'encouragement-editor' : 'testimony-editor')
   if (!textarea) return
@@ -124,6 +171,13 @@ const formatActions = [
   { icon: ListOrdered, handler: (target) => insertMarkdown(target, '1. '), label: 'Numbered List' },
   { icon: Link, handler: (target) => insertMarkdown(target, '[', '](url)'), label: 'Link' },
   { icon: Quote, handler: (target) => insertMarkdown(target, '> '), label: 'Quote' },
+  { 
+    icon: Book, 
+    handler: (target) => {
+      if (target === 'encouragement') isBibleModalOpen.value = true
+    }, 
+    label: 'Bible Verse' 
+  },
 ]
 
 </script>
@@ -268,6 +322,54 @@ const formatActions = [
         </div>
       </div>
     </section>
+
+    <!-- Bible Search Modal -->
+    <Transition name="fade">
+      <div v-if="isBibleModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <Card class="w-full max-w-lg shadow-2xl border-primary/20">
+          <CardHeader class="flex flex-row items-center justify-between border-b pb-4">
+            <div class="flex items-center gap-2">
+              <Book class="w-5 h-5 text-primary" />
+              <CardTitle>Bible Verse Search</CardTitle>
+            </div>
+            <Button variant="ghost" size="icon" @click="closeBibleModal" class="h-8 w-8">
+              <X class="w-4 h-4" />
+            </Button>
+          </CardHeader>
+          <CardContent class="pt-6 space-y-4">
+            <div class="flex gap-2">
+              <div class="relative flex-1">
+                <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input 
+                  v-model="bibleSearchQuery" 
+                  placeholder="e.g. John 3:16 or Psalm 23"
+                  class="pl-9"
+                  @keydown.enter="searchBible"
+                />
+              </div>
+              <Button @click="searchBible" :disabled="isSearchingBible">
+                <Loader2 v-if="isSearchingBible" class="w-4 h-4 mr-2 animate-spin" />
+                Search
+              </Button>
+            </div>
+
+            <div v-if="bibleError" class="p-3 bg-destructive/10 text-destructive text-sm rounded-lg border border-destructive/20">
+              {{ bibleError }}
+            </div>
+
+            <div v-if="bibleSearchResult" class="space-y-4">
+              <div class="p-4 bg-muted/30 rounded-lg border border-dashed text-sm italic leading-relaxed">
+                "{{ bibleSearchResult.text.trim() }}"
+                <p class="not-italic font-bold mt-2 text-primary">— {{ bibleSearchResult.reference }}</p>
+              </div>
+              <Button @click="insertVerse" class="w-full gap-2">
+                Insert into Encouragement
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </Transition>
   </div>
   
   <div v-else class="flex flex-col items-center justify-center min-h-[50vh] text-center">
