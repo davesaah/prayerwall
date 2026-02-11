@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Calendar, BookOpen } from 'lucide-vue-next'
+import ThemeToggle from '@/components/ThemeToggle.vue'
 
 const router = useRouter()
 const { entries } = useJournal()
@@ -43,9 +44,12 @@ const openEntry = (id) => {
           Share your prayer requests and see how God is moving.
         </p>
       </div>
-      <Button @click="createNewEntry" size="lg" class="shadow-lg hover:shadow-xl transition-all">
-        New Prayer Request
-      </Button>
+      <div class="flex items-center gap-4">
+        <ThemeToggle />
+        <Button @click="createNewEntry" size="lg" class="shadow-lg hover:shadow-xl transition-all">
+          New Prayer Request
+        </Button>
+      </div>
     </header>
 
     <div v-if="entries.length === 0" class="flex flex-col items-center justify-center min-h-[400px] text-center border-2 border-dashed rounded-lg bg-muted/30">

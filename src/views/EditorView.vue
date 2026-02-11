@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { ArrowLeft, Save, Eye, EyeOff, Bold, Italic, Heading1, Heading2, List, ListOrdered, Link, Quote } from 'lucide-vue-next'
+import ThemeToggle from '@/components/ThemeToggle.vue'
 import { marked } from 'marked'
 
 const route = useRoute()
@@ -131,6 +132,7 @@ const formatQuote = () => insertMarkdown('> ')
           <component :is="showPreview ? EyeOff : Eye" class="w-4 h-4" />
           {{ showPreview ? 'Hide' : 'Show' }} Preview
         </Button>
+        <ThemeToggle />
         <Button @click="save" class="gap-2">
           <Save class="w-4 h-4" /> Save
         </Button>

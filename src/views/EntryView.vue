@@ -12,6 +12,7 @@ import {
   CardContent
 } from '@/components/ui/card'
 import { ArrowLeft, MessageSquare, Send, Bold, Italic, Heading1, Heading2, List, ListOrdered, Link, Quote, Book, Search, X, Loader2 } from 'lucide-vue-next'
+import ThemeToggle from '@/components/ThemeToggle.vue'
 import { marked } from 'marked'
 
 const route = useRoute()
@@ -188,6 +189,7 @@ const formatActions = [
       <Button variant="ghost" @click="goBack" class="gap-2 pl-0 hover:pl-2 transition-all">
         <ArrowLeft class="w-4 h-4" /> Back to Wall
       </Button>
+      <ThemeToggle />
     </header>
 
     <article class="mb-12">
