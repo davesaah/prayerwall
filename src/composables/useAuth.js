@@ -11,7 +11,7 @@ let authPromise = null
 
 const initAuth = async () => {
   if (authPromise) return authPromise
-  
+
   authPromise = (async () => {
     // Check current session
     const { data: { session } } = await supabase.auth.getSession()
@@ -22,7 +22,7 @@ const initAuth = async () => {
     supabase.auth.onAuthStateChange((_event, session) => {
       currentUser.value = session?.user ?? null
     })
-    
+
     return true
   })()
 
@@ -41,12 +41,12 @@ export function useAuth() {
       email,
       password,
     })
-    
+
     if (error) {
       console.error('Login error:', error.message)
       return { success: false, error: error.message }
     }
-    
+
     return { success: true }
   }
 
@@ -57,12 +57,12 @@ export function useAuth() {
         redirectTo: window.location.origin
       }
     })
-    
+
     if (error) {
       console.error('Google login error:', error.message)
       return { success: false, error: error.message }
     }
-    
+
     return { success: true }
   }
 
@@ -71,12 +71,12 @@ export function useAuth() {
       email,
       password,
     })
-    
+
     if (error) {
       console.error('Signup error:', error.message)
       return { success: false, error: error.message }
     }
-    
+
     return { success: true }
   }
 
