@@ -34,3 +34,4 @@ A web application for prayer requests and wall of prayer.
 - Treat everything with gentleness and love.
 - No prayer request is too small or too big to be shared.
 - Also pray for what you share; don't just drop and run. God is not isolated to a few 'prayer warriors'; He wants to have a personal relationship with you.
+- Anything posted outside the context of this platform will be deleted without notice.
